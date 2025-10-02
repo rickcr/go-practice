@@ -54,6 +54,20 @@ func processResult(result TaskResult, wg *sync.WaitGroup) {
 		processingTime)
 }
 
+// processResults reads results from the channel and processes them concurrently
+func processResults(ch <-chan TaskResult, processWG *sync.WaitGroup) {
+	for result := range ch {
+		// Simulate a slow receiver
+		time.Sleep(500 * time.Millisecond) // Artificial delay
+		// Increment processWG for each result being processed
+		processWG.Add(1)
+		// Process each result in a separate goroutine
+		go processResult(result, processWG)
+	}
+	// After the channel is closed, wait for all processing to complete
+	processWG.Wait()
+}
+
 func main() {
 	fmt.Println("=== Concurrent Task Example with Real-Time Notifications ===")
 
@@ -79,6 +93,8 @@ func main() {
 	var taskWG, processWG sync.WaitGroup
 
 	// Launch a goroutine to collect results and process them concurrently
+	//if annoymous function
+	/*
 	go func() {
 		for result := range resultChan {
 			// Simulate a slow receiver
@@ -96,7 +112,11 @@ func main() {
 		// After the channel is closed, wait for all processing to complete
 		processWG.Wait()
 	}()
+	*/
 
+	// Launch the result processing goroutine
+	go processResults(resultChan, &processWG)
+	
 	// Launch task goroutines
 	fmt.Println("Launching", numTasks, "tasks...")
 	start := time.Now()
